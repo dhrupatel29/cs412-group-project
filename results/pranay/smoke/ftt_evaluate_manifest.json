@@ -1,0 +1,27 @@
+{
+  "cpu": "Intel(R) Core(TM) Ultra 7 155U",
+  "cpu_architecture": "Intel64 Family 6 Model 170 Stepping 4, GenuineIntel",
+  "phase": "two-epoch full-data integration check; not tuned or final results",
+  "configuration_source": "configs/ft_transformer_initial.yaml with --max-epochs 2 --patience 1",
+  "effective_config": {
+    "n_blocks": 1,
+    "d_block": 96,
+    "attention_dropout": 0.1,
+    "ffn_dropout": 0.0,
+    "lr": 0.0001,
+    "weight_decay": 0.00001,
+    "batch_size": 256,
+    "max_epochs": 2,
+    "patience": 1,
+    "device": "cpu",
+    "num_threads": 4
+  },
+  "platform": "Windows-11-10.0.26300-SP0",
+  "logical_cpus": 14,
+  "torch": "2.11.0+cpu",
+  "device": "cpu",
+  "threads": 4,
+  "model_seed": 42,
+  "split_seed": 42,
+  "timing": "fit includes preprocessing and validation early stopping; inference includes preprocessing; full-test batch; one warm-up prediction per condition"
+}

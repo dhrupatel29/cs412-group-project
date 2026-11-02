@@ -3,5 +3,6 @@ pandas
 scikit-learn==1.9.1
 xgboost==3.4.1
 torch
+rtdl_revisiting_models==0.0.2
 matplotlib
 pyyaml
