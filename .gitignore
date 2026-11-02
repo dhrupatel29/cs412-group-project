@@ -1,0 +1,13 @@
+data/*
+!data/README.md
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+.DS_Store
+*.pt
+*.aux
+*.log
+*.out
+*.synctex.gz
