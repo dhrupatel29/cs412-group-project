@@ -1,0 +1,5 @@
+split,model,n_seeds,fit_s_mean,fit_s_std,infer_ms_per_row_mean,infer_ms_per_row_std
+chronological,logreg,1,0.6069916000124067,,0.0071993364557156,
+chronological,xgb,1,1.8367340000113472,,0.0045358957705449,
+random,logreg,1,0.9934690999798476,,0.0070627124118403,
+random,xgb,1,2.381966700020712,,0.0168260398093562,

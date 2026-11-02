@@ -1,0 +1,89 @@
+% Pranay's sections. Add \input{pranay_sections} to the team's ACM/CVPR report.
+% Bibliography entries are in pranay_references.bib. Final results belong to Dhru.
+\section{Introduction}
+Predicting whether a customer will subscribe to a bank term deposit is a supervised
+learning problem with heterogeneous numerical and categorical inputs. A useful
+marketing model must predict an outcome before that outcome is known. We exclude
+the duration of the current call because it becomes available only after the call
+ends. Our experiments use the chronologically ordered Bank Marketing release
+\cite{moro2014bank}.
+
+The evaluation setting matters when campaign records change over time. A random
+partition mixes earlier and later records, whereas a chronological partition
+evaluates later observations using a model trained on earlier ones. The two test
+sets are different populations, so their metric difference is not a causal estimate
+of time alone. We therefore examine class prevalence and feature changes alongside
+predictive performance. We also simulate incomplete inputs by masking 10\%, 20\%,
+and 30\% of test cells, with the same masks for every model.
+
+Our project compares Logistic Regression, a multilayer perceptron, XGBoost, and
+FT-Transformer. The questions are whether feature-token attention improves the
+comparison with conventional baselines, how rankings change under chronological
+evaluation, and how sensitive the models are to missing inputs. We use validation
+data for early stopping, configuration selection, and the F1 decision threshold.
+Final claims will rely on the team's frozen configurations and five-seed runs,
+rather than the development runs described in the implementation notes.
+
+\section{Related Work}
+XGBoost is a scalable system for gradient-boosted decision trees
+\cite{chen2016xgboost}. It provides the principal tree-ensemble baseline for this
+project. Gorishniy et al. compare tabular neural architectures under a common
+evaluation protocol, identify a strong residual-network baseline, and introduce
+FT-Transformer \cite{gorishniy2021revisiting}. Their results support competitive
+neural models without establishing a universally superior choice over boosted
+trees. We use their official implementation rather than claiming a new attention
+architecture \cite{rtdlcode}.
+
+Our contribution is an evaluation of these model families on the same Bank
+Marketing task with a fixed random partition, a chronological partition, and
+controlled missingness. It is an application study, not a replication of every
+dataset or experiment in the FT-Transformer paper. Preprocessing, validation
+selection, uncertainty over seeds, and runtime accounting are part of the
+comparison.
+
+\subsection{FT-Transformer}
+For each numerical feature, the tokenizer applies a learned feature-specific
+linear embedding. Each categorical feature has its own embedding table and feature
+bias. A learned \texttt{[CLS]} token joins the feature tokens. Transformer blocks
+use self-attention and feed-forward transformations to learn feature interactions.
+The final \texttt{[CLS]} representation produces a single logit, which becomes a
+subscription probability through a sigmoid function. The implementation uses
+\texttt{rtdl\_revisiting\_models} version 0.0.2, including its PreNorm architecture
+and ReGLU feed-forward activation \cite{rtdlcode}.
+
+All preprocessing fits only on training records. Numerical features use training
+medians followed by standardization. Every categorical column uses a vocabulary
+constructed only from its observed, nonmissing training values. Index zero is
+reserved for missing and unseen values; its embedding is fixed to zero. The
+dataset's literal \texttt{unknown} category receives its own ordinary index.
+This strategy handles masked inputs without learning a dedicated mask token or
+augmenting training with simulated missingness. It follows the common imputation
+condition in the project plan, though categorical representations necessarily
+differ between embedding models and one-hot baselines.
+
+Training minimizes unweighted binary cross-entropy with logits using AdamW. We
+seed Python, NumPy, PyTorch, and batch shuffling, and enable deterministic PyTorch
+operations. Validation average precision selects the best epoch, with a maximum
+of 100 epochs and patience of 16 epochs. We restore the selected weights before
+inference. The initial CPU development configuration has one block, width 96,
+batch size 256, learning rate $10^{-4}$, and weight decay $10^{-5}$; it is explicitly
+distinct from the configuration to be chosen by the 20-trial validation search.
+
+The prepared search samples one to four blocks, widths in
+$\{96,128,192,256\}$, attention dropout in $[0.1,0.4)$, and feed-forward dropout in
+$[0,0.3)$. Learning rate is log-uniform between $3\times10^{-5}$ and
+$3\times10^{-4}$; weight decay is log-uniform between $10^{-6}$ and $10^{-4}$.
+The search uses only chronological training and validation partitions with seed
+42. A tuned configuration must not be labeled frozen until all 20 trials finish
+and the team confirms the shared protocol.
+
+\subsection{Runtime Measurement}
+The runtime summary uses one clean-input measurement per model, split, and seed.
+Mask conditions reuse the same fitted model, so treating their repeated fit-time
+values as independent fits would overcount observations. We report the mean and
+sample standard deviation across model seeds; a one-seed standard deviation is
+undefined. Fit time includes preprocessing and training, and inference latency
+includes preprocessing and probability prediction per input row. Hardware, device,
+thread count, batch size, warm-up, and repetition policy must accompany the final
+measurements. Existing pilot timings without a hardware manifest are descriptive
+and cannot establish a fair cross-model speed ranking.
