@@ -1,0 +1,4 @@
+# Search space: C: log-uniform [0.001, 100]
+# Chronological split; seed 42; 20 trials; selected by validation AP.
+# Best trial: 18; validation AP: 0.21920056
+C: 0.002084905046373985

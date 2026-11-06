@@ -1,0 +1,10 @@
+# Search space: n_estimators: integer [100, 1000]; max_depth: integer [2, 8]; learning_rate: log-uniform [0.01, 0.3]; subsample: uniform [0.6, 1.0]; colsample_bytree: uniform [0.6, 1.0]; reg_lambda: log-uniform [0.1, 10]; min_child_weight: integer [1, 10]
+# Chronological split; seed 42; 20 trials; selected by validation AP.
+# Best trial: 17; validation AP: 0.16336050
+n_estimators: 746
+max_depth: 3
+learning_rate: 0.05496723443534149
+subsample: 0.6609248410852674
+colsample_bytree: 0.8785281500310944
+reg_lambda: 0.7803915372354437
+min_child_weight: 2
