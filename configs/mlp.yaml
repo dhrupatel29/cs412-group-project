@@ -1,0 +1,8 @@
+# Search space: n_layers: integer [1, 4]; width: choice {64, 128, 256, 512}; dropout: uniform [0, 0.5]; lr: log-uniform [1e-4, 3e-3]; weight_decay: log-uniform [1e-6, 1e-3]
+# Chronological split; seed 42; 20 trials; selected by validation AP.
+# Best trial: 5; validation AP: 0.23867032
+n_layers: 1
+width: 256
+dropout: 0.03190862805208766
+lr: 0.0016692123728804297
+weight_decay: 7.85223335055597e-05

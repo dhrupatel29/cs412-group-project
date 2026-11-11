@@ -25,6 +25,13 @@ SEARCH_SPACES = {
         "reg_lambda: log-uniform [0.1, 10]; "
         "min_child_weight: integer [1, 10]"
     ),
+    "mlp": (
+        "n_layers: integer [1, 4]; "
+        "width: choice {64, 128, 256, 512}; "
+        "dropout: uniform [0, 0.5]; "
+        "lr: log-uniform [1e-4, 3e-3]; "
+        "weight_decay: log-uniform [1e-6, 1e-3]"
+    ),
 }
 
 
@@ -45,6 +52,15 @@ def sample_config(name, rng):
             "colsample_bytree": float(rng.uniform(0.6, 1.0)),
             "reg_lambda": log_uniform(rng, 0.1, 10),
             "min_child_weight": int(rng.integers(1, 11)),
+        }
+
+    if name == "mlp":
+        return {
+            "n_layers": int(rng.integers(1, 5)),
+            "width": int(rng.choice([64, 128, 256, 512])),
+            "dropout": float(rng.uniform(0.0, 0.5)),
+            "lr": log_uniform(rng, 1e-4, 3e-3),
+            "weight_decay": log_uniform(rng, 1e-6, 1e-3),
         }
 
     raise ValueError(f"No search space for: {name}")
