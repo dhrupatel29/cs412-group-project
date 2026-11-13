@@ -28,6 +28,7 @@ def main():
     parser.add_argument('--out-dir', default='results/pranay')
     parser.add_argument('--max-epochs', type=int)
     parser.add_argument('--patience', type=int)
+    parser.add_argument('--resume', action='store_true', help='Resume completed trials from this output directory')
     args = parser.parse_args()
     if args.trials < 1 or (args.max_epochs is not None and args.max_epochs < 1) or (args.patience is not None and args.patience < 1):
         parser.error('trials, max-epochs, and patience must be positive')
@@ -44,7 +45,12 @@ def main():
         Xtr, ytr = X.iloc[:ntrain], y[:ntrain]
         Xva, yva = X.iloc[ntrain:ntrain+nval], y[ntrain:ntrain+nval]
         rng = np.random.default_rng(42)
-        rows = []
+        trial_log = out/'ftt_tuning.csv'
+        rows = pd.read_csv(trial_log).to_dict('records') if args.resume and trial_log.exists() else []
+        if trial_log.exists() and not args.resume:
+            parser.error('Trial log already exists; use --resume or a fresh --out-dir')
+        if len(rows) > args.trials or [r['trial'] for r in rows] != list(range(1,len(rows)+1)):
+            parser.error('Cannot resume: unexpected trial numbers')
         best = -np.inf
         for trial in range(args.trials):
             cfg = dict(n_blocks=int(rng.integers(1,5)), d_block=int(rng.choice([96,128,192,256])),
@@ -52,25 +58,44 @@ def main():
                        lr=float(10**rng.uniform(np.log10(3e-5),np.log10(3e-4))),
                        weight_decay=float(10**rng.uniform(-6,-4)), max_epochs=args.max_epochs or 100,
                        patience=args.patience or 16, device='cpu', num_threads=4)
-            model = FTTransformer(nums, cats, seed=42, **cfg)
-            start = time.perf_counter()
-            model.fit(Xtr,ytr,Xva,yva)
-            rows.append(dict(trial=trial+1, val_ap=model.best_val_ap_, best_epoch=model.best_epoch_,
-                             epochs_trained=model.epochs_trained_, fit_s=time.perf_counter()-start,
-                             **cfg))
-            pd.DataFrame(rows).to_csv(out/'ftt_tuning.csv',index=False)
-            if model.best_val_ap_ > best:
-                best, best_cfg = model.best_val_ap_, cfg
+            if trial < len(rows):
+                row = rows[trial]
+                if any(not np.isclose(row[k], v, rtol=1e-10, atol=0) if isinstance(v,float)
+                       else row[k] != v for k,v in cfg.items()):
+                    parser.error(f'Cannot resume: parameters differ at trial {trial+1}')
+                ap = float(row['val_ap'])
+                if not np.isfinite(ap) or not 0 <= ap <= 1:
+                    parser.error(f'Cannot resume: invalid AP at trial {trial+1}')
+            else:
+                print(f'Starting trial {trial+1}/{args.trials}: {cfg}',flush=True)
+                model = FTTransformer(nums, cats, seed=42, verbose=True, **cfg)
+                start = time.perf_counter()
+                model.fit(Xtr,ytr,Xva,yva)
+                ap = model.best_val_ap_
+                rows.append(dict(trial=trial+1, val_ap=ap, best_epoch=model.best_epoch_,
+                                 epochs_trained=model.epochs_trained_, fit_s=time.perf_counter()-start,
+                                 **cfg))
+                tmp = trial_log.with_suffix('.csv.tmp')
+                pd.DataFrame(rows).to_csv(tmp,index=False)
+                tmp.replace(trial_log)
+            if ap > best:
+                best, best_cfg, best_trial = ap, cfg, trial+1
                 (out/'ftt_best_so_far.yaml').write_text(yaml.safe_dump(best_cfg,sort_keys=False))
-            print(f'Trial {trial+1}/{args.trials}: AP={model.best_val_ap_:.6f}, best={best:.6f}, epochs={model.epochs_trained_}',flush=True)
-        if args.trials == 20:
+            print(f'Trial {trial+1}/{args.trials}: AP={ap:.6f}, best={best:.6f}, epochs={rows[trial]["epochs_trained"]}',flush=True)
+        if args.trials == 20 and args.max_epochs in (None,100) and args.patience in (None,16):
             target = Path('configs/ft_transformer.yaml')
             target.parent.mkdir(exist_ok=True)
-            target.write_text('# 20 random-search trials, chronological validation AP, split/model seed 42.\n'
+            config_text = ('# 20 random-search trials, chronological validation AP, split/model seed 42.\n'
                 '# Ranges: blocks 1-4; width 96/128/192/256; attention dropout .1-.4; FFN dropout 0-.3;\n'
                 '# lr log-uniform 3e-5..3e-4; weight decay log-uniform 1e-6..1e-4. No test selection.\n'
+                f'# Best trial: {best_trial}; validation AP: {best:.8f}\n'
                 + yaml.safe_dump(best_cfg,sort_keys=False))
-        manifest.update(completed_trials=args.trials, best_val_ap=best, test_used=False)
+            target.write_text(config_text)
+            # The team's shared runner loads configs/<registry key>.yaml.
+            target.with_name('ftt.yaml').write_text(config_text)
+        manifest.update(completed_trials=args.trials, best_trial=best_trial, best_val_ap=best,
+                        test_used=False, max_epochs=args.max_epochs or 100,
+                        patience=args.patience or 16, train_rows=len(ytr), validation_rows=len(yva))
     else:
         cfg = yaml.safe_load(Path(args.config).read_text()) if args.config else {}
         if args.max_epochs is not None:

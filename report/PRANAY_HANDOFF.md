@@ -19,8 +19,11 @@ specifies split seed 42, 20 trials, validation AP, and the common imputation
 condition. Confirm those shared decisions before treating a configuration as
 frozen. The development YAML is deliberately named `ft_transformer_initial.yaml`.
 
-Pranay chose to finish the Nov 8 milestone now and leave the full tuning search
-for the Nov 9-15 period. No 20-trial search or frozen tuned config is claimed.
+The Nov 15 search uses the same chronological split, seed 42, 20-trial budget,
+and validation AP selection as the other models' tuning runs. On interruption,
+use `--resume` with the same output directory and training settings. The
+existing `nov15_runtime_pilot` summary covers Logistic Regression and XGBoost;
+it is a one-seed pilot, not the final four-model comparison.
 
 ## Commands (PowerShell, repository root)
 
@@ -30,8 +33,8 @@ for the Nov 9-15 period. No 20-trial search or frozen tuned config is claimed.
 # Quick full-data integration check, not a tuned or final result:
 .\.venv\Scripts\python.exe -m experiments.ftt evaluate --config configs/ft_transformer_initial.yaml --max-epochs 2 --patience 1 --out-dir results/pranay/smoke
 # Nov 9-15: run after the team locks the tuning protocol (CPU can take hours):
-.\.venv\Scripts\python.exe -m experiments.ftt tune --trials 20
-# Inspect all 20 rows in results/pranay/ftt_tuning.csv before freezing.
+.\.venv\Scripts\python.exe -m experiments.ftt tune --trials 20 --out-dir results/pranay/nov15_tuning --resume
+# Inspect all 20 rows in results/pranay/nov15_tuning/ftt_tuning.csv before freezing.
 .\.venv\Scripts\python.exe -m experiments.ftt evaluate --config configs/ft_transformer.yaml --out-dir results/pranay/tuned_check
 # Explicitly select the latest appended pilot rows; do not mix repeated runs:
 .\.venv\Scripts\python.exe -m experiments.runtime --input results/metrics.csv --latest-per-condition --out results/pranay/runtime_pilot.csv
@@ -61,8 +64,10 @@ the vocabulary.
 
 ## Final dependencies
 
-Vaibhav's MLP is still a placeholder at this checkpoint. Dhru owns the final
-five-seed experiment runs and shared config loader. The runtime table cannot be
+Vaibhav's MLP and Dhru's config loader are implemented. The shared runner looks
+for `configs/ftt.yaml`, so the tuner writes that file and the identically sized
+`configs/ft_transformer.yaml` handoff config with the same settings. Dhru owns the
+final five-seed experiment runs. The runtime table cannot be
 called a final four-model comparison until those inputs exist. Run aggregation
 on clean rows only, record hardware from the actual measuring process, and do not
 claim that existing pilot timings have a verified common hardware protocol.
