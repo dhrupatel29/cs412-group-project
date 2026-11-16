@@ -1,8 +1,8 @@
 # Data
 
-Not committed. Download the UCI Bank Marketing archive:
-https://archive.ics.uci.edu/dataset/222/bank+marketing
+We use the UCI Bank Marketing dataset (`bank-additional-full.csv`, 41,188 rows, `;`-separated). It's already in this folder, so there's nothing to download.
 
-Unzip it, open the inner `bank-additional.zip`, and put **`bank-additional-full.csv`** (41,188 rows, `;`-separated) in this folder.
+Source: https://archive.ics.uci.edu/dataset/222/bank+marketing
+(Moro, Cortez & Rita, 2014)
 
-Do not use `bank-full.csv` (45,211-row older version) or `bank-additional.csv` (10% sample).
+We drop the `duration` column because it's only known after the call ends, so keeping it would leak the answer.

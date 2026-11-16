@@ -1,7 +1,6 @@
-"""Logistic Regression and XGBoost baselines (pilot configs from the intermediate report)."""
+"""Logistic Regression and XGBoost baselines."""
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
-from xgboost import XGBClassifier
 
 from src.data import make_preprocessor
 from src.models.base import BaseModel
@@ -31,6 +30,9 @@ class LogReg(_SklearnPipelineModel):
 
 class XGB(_SklearnPipelineModel):
     def _estimator(self):
+        # Imported here, not at the top: loading xgboost and torch together crashes on macOS.
+        from xgboost import XGBClassifier
+
         cfg = {
             "n_estimators": 300, "max_depth": 4, "learning_rate": 0.05,
             "subsample": 0.8, "colsample_bytree": 0.8, "reg_lambda": 1.0,
