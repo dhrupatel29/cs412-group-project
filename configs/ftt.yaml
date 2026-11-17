@@ -1,0 +1,14 @@
+# 20 random-search trials, chronological validation AP, split/model seed 42.
+# Ranges: blocks 1-4; width 96/128/192/256; attention dropout .1-.4; FFN dropout 0-.3;
+# lr log-uniform 3e-5..3e-4; weight decay log-uniform 1e-6..1e-4. No test selection.
+# Best trial: 13; validation AP: 0.24257419
+n_blocks: 2
+d_block: 192
+attention_dropout: 0.24132886184293978
+ffn_dropout: 0.16957083194435665
+lr: 0.00017463050589581328
+weight_decay: 1.8596732323761846e-05
+max_epochs: 100
+patience: 16
+device: cpu
+num_threads: 4

@@ -1,0 +1,19 @@
+{
+  "cpu": "Intel64 Family 6 Model 170 Stepping 4, GenuineIntel",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "logical_cpus": 14,
+  "torch": "2.11.0+cpu",
+  "device": "cpu",
+  "threads": 4,
+  "model_seed": 42,
+  "split_seed": 42,
+  "timing": "fit includes preprocessing and validation early stopping; inference includes preprocessing; full-test batch; one warm-up prediction per condition",
+  "completed_trials": 20,
+  "best_trial": 13,
+  "best_val_ap": 0.24257418801704178,
+  "test_used": false,
+  "max_epochs": 100,
+  "patience": 16,
+  "train_rows": 28831,
+  "validation_rows": 6178
+}
